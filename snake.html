@@ -1,0 +1,256 @@
+<head>
+
+  <style>
+
+    button {
+      border: none;
+      background-color: yellow;
+      padding: 15px 72px;
+      font-size: 30px;
+      color: blue;
+    }
+
+    button:hover {
+      background-color: blue;
+      color: yellow;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <table style="width:100%;">
+    <tr>
+      <td></td>
+      <th><p><a href="index.html">HOME</a></p></th>
+      <td></td>
+    </tr>
+  </table>
+
+<canvas id="canvas" width="1800" height="900"></canvas>
+<button id="btn" style="z-index:-1; position:absolute; top:500; left:750" onClick="ricaricaPagina()">Nuova Partita</button>
+
+<script>
+
+g = document.getElementById("canvas").getContext("2d");
+g.lineWidth = 0.1;
+
+
+
+var l=1800;
+var h=900;
+
+var tasto=0;
+
+var sakura=new Image();
+sakura.src="cherry.png";
+
+var wasd=new Image();
+wasd.src="comandi.png";
+
+var lenght=0;
+var len = 10; //quanto allungarlo
+
+var score = 0;
+
+var direzione;
+
+function passaTasto(evento){
+   tasto = evento.keyCode;
+}
+
+var n=0; //numero eventi
+
+function gestisciEventoTasto(evento) {
+
+	if(n == 0){passaTasto(evento); n=1;} //start
+    else if(evento.keyCode == 68 && direzione!="left"){passaTasto(evento);} //non far invertire direzione
+	else if(evento.keyCode == 87 && direzione!="down"){passaTasto(evento);}
+	else if(evento.keyCode == 65 && direzione!="right"){passaTasto(evento);}
+	else if(evento.keyCode == 83 && direzione!="up"){passaTasto(evento);}
+}
+
+addEventListener("keydown", gestisciEventoTasto );
+
+
+
+function Snake(id){ //ogni Snake è un quadratino
+this.id=id;
+if(id == 0){
+this.x=Math.random()*l-100;
+this.y=Math.random()*h-50;
+this.color="lime";
+} else {
+    this.x = backupX;
+	this.y = backupY;
+}
+
+ if(this.x<0+100){this.x+=100;}
+ if(this.y<0+50){this.y+=50;}
+
+this.speed=10;
+
+
+    this.draw=function(){
+    g.fillStyle=this.color;
+    g.fillRect(this.x,this.y,20,20);
+    }
+
+    this.update=function(){
+	if(id == 0){ //se sei il primo quadratino
+    if(tasto==68){this.x+=this.speed; direzione="right"; }
+	if(tasto==87){this.y-=this.speed; direzione="up"; }
+	if(tasto==65){this.x-=this.speed; direzione="left";}
+    if(tasto==83){this.y+=this.speed; direzione="down";}
+	//if(tasto==32){this.speed=0;} //ferma (test)
+
+	if(this.x>l){this.x=0;}
+	if(this.x<0){this.x=l;}
+	if(this.y>h){this.y=0;}
+	if(this.y<0){this.y=h;}
+
+
+
+	}
+
+	else if(id>0 && id%2 == 1){ //se non sei il primo segui il tuo precedente
+	    this.x = backupX;
+		this.y = backupY;
+	} else if(id!=0){
+	    this.x = backupX2;
+		this.y = backupY2;
+	}
+    }
+}
+
+let snakes = [];
+var snake=new Snake(lenght); //primo quadratino
+snakes.push(snake);
+
+
+
+
+
+
+function Cherry(){
+this.x=Math.random()*l-100;
+this.y=Math.random()*h-50;
+ if(this.x<0+100){this.x+=100;}
+ if(this.y<0+50){this.y+=50;}
+ if(this.x==snake.x){this.x+=100;}
+
+
+   this.draw=function(){
+   g.drawImage(sakura,this.x,this.y,40,50);
+   }
+
+   this.update=function(){
+     if(snake.x<=this.x+40 && snake.x>=this.x && snake.y<=this.y+50 && snake.y>=this.y){  //prendi una ciliegia
+        this.x=Math.random()*l-100;
+        this.y=Math.random()*h-50;
+
+        if(this.x<0+100){this.x+=100;}
+        if(this.y<0+50){this.y+=50;}
+        if(this.x==snake.x){this.x+=100;}
+
+		score+=1;
+
+		for(i=0;i<len;i++){
+		lenght += 1;
+		snakes.push(new Snake(lenght));
+		}
+     }
+   }
+}
+
+var cherry=new Cherry;
+
+var backupX;
+var backupY;
+var backupX2;
+var backupY2;
+
+
+function  write(color, text, x, y){
+  g.fillStyle=color; //punteggio
+  g.font = "40px Comic Sans";
+  g.fillText(text,x,y);
+}
+
+
+
+var spegni=false;
+
+function ricaricaPagina(){
+  window.location.href = window.location.href;
+}
+
+
+function animation(){//per ogni frame
+
+g.fillStyle="blue"; //sfondo
+g.fillRect(0,0,l,h);
+
+write("white", score,l/2,h/2); //punteggio
+
+if(direzione==undefined){
+  g.drawImage(wasd,300,150,250,150);
+}
+
+
+for(i=0; i<=lenght; i++){ //per ogni quadratino
+
+      if (i==0 || i%2==0){ //aggiorna pos
+          backupX = snakes[i].x;
+          backupY = snakes[i].y;
+      } else {
+          backupX2 = snakes[i].x;
+          backupY2 = snakes[i].y;
+      }
+
+
+      snakes[i].update();
+      snakes[i].draw();
+
+      if (i>2){ //evita che si tocchi tra i primi 2 quadratini
+          if(snake.x<=snakes[i].x+19 && snake.x>=snakes[i].x && snake.y<=snakes[i].y+19 && snake.y>=snakes[i].y && lenght!=0){ //controlla morte
+
+                    snake.speed=0;
+                    snake.color="red";
+
+
+                    setTimeout(function () {
+                      g.fillStyle="blue";
+                      g.fillRect(0,0,l,h);
+                      write("red","Sei morto  Punti:" + score,l/2-160,h/2);
+
+                      document.getElementById('btn').style="z-index:2; position:absolute; top:500; left:750"; //tira su il bottone per ricominciare
+
+                      spegni = true;
+                    }, lenght*18); //fai finire animazione, il tempo che ci mette è in base alla lunghezza
+
+
+          }
+
+      }
+}
+
+cherry.update();
+cherry.draw();
+
+
+
+    if(!spegni){
+        requestAnimationFrame(animation);
+      }
+
+}
+animation();
+
+
+</script>
+
+
+
+</body>

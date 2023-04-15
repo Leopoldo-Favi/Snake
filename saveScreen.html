@@ -1,0 +1,213 @@
+<body>
+
+  <table style="width:100%;">
+    <tr>
+      <td></td>
+      <th><p><a href="index.html">HOME</a></p></th>
+      <td></td>
+    </tr>
+  </table>
+
+<canvas id="canvas" width="1800" height="900"></canvas>
+
+
+<script>
+
+g = document.getElementById("canvas").getContext("2d");
+g.lineWidth = 0.1;
+
+
+
+var l=1800;
+var h=900;
+
+var tasto=0;
+
+var sakura=new Image();
+sakura.src="cherry.png";
+
+
+var lenght=0;
+var len = 50; //quanto allungarlo
+
+
+var direzione="right";
+
+
+
+function Snake(id){ //ogni Snake è un quadratino
+this.id=id;
+if(id == 0){
+this.x=Math.random()*l-100;
+this.y=Math.random()*h-50;
+this.color="lime";
+} else {
+    this.x = backupX;
+	this.y = backupY;
+}
+
+ if(this.x<0+100){this.x+=100;}
+ if(this.y<0+50){this.y+=50;}
+
+this.speed=10;
+
+
+    this.draw=function(){
+    g.fillStyle=this.color;
+    g.fillRect(this.x,this.y,20,20);
+    }
+
+    this.update=function(){
+      	if(id == 0){ //se sei il primo quadratino
+          if(direzione=="right"){this.x+=this.speed;}
+      	  if(direzione=="up"){this.y-=this.speed;}
+      	  if(direzione=="left"){this.x-=this.speed;}
+          if(direzione=="down"){this.y+=this.speed;}
+          //if(tasto==32){this.speed=0;} //ferma (test)
+
+          if(this.x>l){this.x=0;}
+          if(this.x<0){this.x=l;}
+          if(this.y>h){this.y=0;}
+          if(this.y<0){this.y=h;}
+
+
+
+      	}
+
+      	else if(id>0 && id%2 == 1){ //se non sei il primo segui il tuo precedente
+      	    this.x = backupX;
+      		  this.y = backupY;
+      	} else if(id!=0){
+      	    this.x = backupX2;
+      		  this.y = backupY2;
+      	}
+  }
+}
+
+let snakes = [];
+var snake=new Snake(lenght); //primo quadratino
+snakes.push(snake);
+
+for(i=0;i<len;i++){ //fallo un po' più lungo all'inizio
+lenght += 1;
+snakes.push(new Snake(lenght));
+}
+
+
+
+
+
+function Cherry(){
+
+this.lenght=100;
+this.height=120;
+
+this.x=Math.random()*l-100;
+this.y=Math.random()*h-50;
+ if(this.x<0+100){this.x+=100;}
+ if(this.y<0+50){this.y+=50;}
+ if(this.x==snake.x){this.x+=100;}
+
+
+   this.draw=function(){
+   g.drawImage(sakura,this.x,this.y,this.lenght,this.height);
+   }
+
+   this.update=function(){
+     if(snake.x<=this.x+this.lenght && snake.x>=this.x && snake.y<=this.y+this.height && snake.y>=this.y){  //prendi una ciliegia
+        this.x=Math.random()*l-100;
+        this.y=Math.random()*h-50;
+
+        if(this.x<0+200){this.x+=200;}
+        if(this.y<0+this.height){this.y+=this.height;}
+        if(this.x==snake.x){this.x+=100;}
+
+
+		for(i=0;i<len;i++){
+		lenght += 1;
+		snakes.push(new Snake(lenght));
+		}
+     }
+   }
+}
+
+var cherry=new Cherry;
+
+var backupX;
+var backupY;
+var backupX2;
+var backupY2;
+
+
+function cambiaDirezione(){
+
+  var dir;
+  var odds = Math.random();
+
+  if (odds <= 0.25){dir="right"} //scegli una direzione a caso
+  else if (odds > 0.25 && odds <= 0.5){dir="left"}
+  else if (odds > 0.5 && odds <=0.75){dir="up"}
+  else if (odds > 0.75){dir="down"}
+
+  if(dir == "right" && direzione == "left" ||
+     dir == "left" && direzione == "right" ||
+     dir == "up" && direzione == "down" ||
+     dir == "down" && direzione == "up"){
+
+       //non cambiarla in caso sia opposta a quella in cui sta andando
+
+  }else {
+              direzione = dir;
+  }
+
+  t = Math.random()*1000; //scegli un tempo casuale dopo il quale richiamare la funzione
+  setTimeout(cambiaDirezione, t);
+
+}
+cambiaDirezione();
+
+
+
+function animation(){//per ogni frame
+
+      g.fillStyle="blue"; //sfondo
+      g.fillRect(0,0,l,h);
+
+
+      for(i=0; i<=lenght; i++){ //per ogni quadratino
+
+            if (i==0 || i%2==0){ //aggiorna pos
+                backupX = snakes[i].x;
+                backupY = snakes[i].y;
+            } else {
+                backupX2 = snakes[i].x;
+                backupY2 = snakes[i].y;
+            }
+
+
+            snakes[i].update();
+            snakes[i].draw();
+
+
+      }
+
+      if(lenght<2000){ //tetto massimo per evitare lag
+
+          cherry.update();
+          cherry.draw();
+      }
+
+
+
+
+
+        requestAnimationFrame(animation);
+
+}
+animation();
+
+
+</script>
+
+
+</body>
